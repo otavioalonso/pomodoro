@@ -34,7 +34,7 @@ def timer(duration):
     try:
         while elapsed < duration:
             elapsed = time.time() - start
-            print(f'{float_to_int(duration - elapsed + 1)//60:02}:{float_to_int(duration - elapsed + 1)%60:02}', end='\r')
+            print(f'{float_to_int(duration - elapsed)//60:02}:{float_to_int(duration - elapsed)%60:02}', end='\r')
             time.sleep(1)
     except KeyboardInterrupt:
         print('\rinterrupted')
