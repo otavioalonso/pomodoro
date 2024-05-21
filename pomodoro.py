@@ -126,7 +126,10 @@ def main():
             projects_completer = prompt.completion.NestedCompleter.from_nested_dict({
                 'work': projects,
                 'add': projects,
-                'list': None,
+                'list': {
+                    'projects': None,
+                    'today': None
+                    },
                 'quit': None,
                 })
             
