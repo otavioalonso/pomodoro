@@ -88,9 +88,14 @@ def log_work(project, duration, work_session = None):
     with open(logfile, 'a') as f:
         f.write(f'{time.time() - duration:.0f}\t{project}\t{duration:.0f}\n')
 
-# class MyCustomCompleter(prompt.completion.Completer):
-#     def get_completions(self, document, complete_event):
-#         yield prompt.completion.Completion('completion', start_position=0)
+def print_session(s):
+    """
+    Print the session summary.
+
+    Args:
+        s (dict): The session summary.
+    """
+    print('    '.join([f'{p} {int_to_ticks(s[p]/60/session_duration)}' for p in s if s[p] > 0.8*session_duration*60]))
 
 def main():
     """
@@ -113,9 +118,12 @@ def main():
     projects = set(log.project)
 
     session = prompt.PromptSession()
+
+    print_session(work_session)
+
     while True:
         try:
-            print('    '.join([f'{p} {int_to_ticks(work_session[p]/60/session_duration)}' for p in work_session if work_session[p] > 0.8*session_duration*60]))
+            # print('    '.join([f'{p} {int_to_ticks(work_session[p]/60/session_duration)}' for p in work_session if work_session[p] > 0.8*session_duration*60]))
             
             projects_completer = prompt.completion.NestedCompleter.from_nested_dict({
                 'work': projects,
@@ -133,13 +141,26 @@ def main():
                 break
 
             if args[0] == 'list':
-                print('\n'.join(projects))
+                # print('\n'.join(projects))
+                day = time.mktime(datetime.date.today().timetuple()) + day_starts_at*3600 - int(args[1])*86400 if len(args) > 1 else today
+                if len(args) > 1 and int(args[1]) > 0:
+                    print(datetime.datetime.fromtimestamp(day).strftime('%Y-%m-%d'))
+                else:
+                    print('today')
+                
+                s = {}
+                for row in log[(log.start > day) * (log.start < day + 86400)].itertuples():
+                    if row.project not in s:
+                        s[row.project] = 0
+                    s[row.project] += row.duration
+                print_session(s)
                 continue
 
             if args[0] == 'add':
                 for a in args[1:]:
                     projects.add(a)
                     log_work(a, session_duration*60, work_session=work_session)
+                print_session(work_session)
                 continue
 
             if args[0] == 'work' and len(args) > 1:
@@ -150,6 +171,7 @@ def main():
                     log_work(project, elapsed, work_session=work_session)
                 print('break')
                 timer(break_duration*60)
+                print_session(work_session)
                 continue
 
         except (EOFError, KeyboardInterrupt):
