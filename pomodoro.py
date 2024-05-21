@@ -123,8 +123,6 @@ def main():
 
     while True:
         try:
-            # print('    '.join([f'{p} {int_to_ticks(work_session[p]/60/session_duration)}' for p in work_session if work_session[p] > 0.8*session_duration*60]))
-            
             projects_completer = prompt.completion.NestedCompleter.from_nested_dict({
                 'work': projects,
                 'add': projects,
@@ -135,18 +133,32 @@ def main():
             args = session.prompt('pomodoro ~ ', completer=projects_completer).split()
 
             if not args:
-                continue
+                args = ['list']
 
             if args[0] == 'quit':
                 break
 
             if args[0] == 'list':
-                # print('\n'.join(projects))
-                day = time.mktime(datetime.date.today().timetuple()) + day_starts_at*3600 - int(args[1])*86400 if len(args) > 1 else today
-                if len(args) > 1 and int(args[1]) > 0:
-                    print(datetime.datetime.fromtimestamp(day).strftime('%Y-%m-%d'))
-                else:
-                    print('today')
+                if len(args) > 2:
+                    print('invalid argument')
+                    continue
+                if len(args) <= 1:
+                    args = ['list', '0']
+                
+                if args[1] == 'projects':
+                    print('\n'.join(projects))
+                    continue
+                if args[1] == 'today':
+                    args[1] = 0
+                try:
+                    day = time.mktime(datetime.date.today().timetuple()) + day_starts_at*3600 - int(args[1])*86400 if len(args) > 1 else today
+                    if int(args[1]) > 0:
+                        print(datetime.datetime.fromtimestamp(day).strftime('%Y-%m-%d'))
+                    else:
+                        print('today')
+                except ValueError:
+                    print('invalid argument')
+                    continue
                 
                 s = {}
                 for row in log[(log.start > day) * (log.start < day + 86400)].itertuples():
@@ -173,6 +185,8 @@ def main():
                 timer(break_duration*60)
                 print_session(work_session)
                 continue
+
+            print('unknown command')
 
         except (EOFError, KeyboardInterrupt):
             break
