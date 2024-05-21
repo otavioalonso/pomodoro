@@ -106,7 +106,7 @@ def main():
         with open(logfile, 'w') as f:
             f.write('start\tproject\tduration\n')
 
-    log = pd.read_csv(logfile, sep='\s+')
+    log = pd.read_csv(logfile, sep=r'\s+')
 
     work_session = {}
     today = time.mktime(datetime.date.today().timetuple()) + day_starts_at*3600
@@ -131,6 +131,7 @@ def main():
                     'today': None
                     },
                 'quit': None,
+                'break': None,
                 })
             
             args = session.prompt('pomodoro ~ ', completer=projects_completer).split()
@@ -185,6 +186,11 @@ def main():
                 if elapsed > 10:
                     log_work(project, elapsed, work_session=work_session)
                 print('break')
+                timer(break_duration*60)
+                print_session(work_session)
+                continue
+
+            if args[0] == 'break':
                 timer(break_duration*60)
                 print_session(work_session)
                 continue
